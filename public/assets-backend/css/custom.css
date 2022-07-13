@@ -1,0 +1,11 @@
+body .error-data{
+	color: red;
+}
+body .error-data-input{
+	border: 1px solid red !important;
+}
+.for-spinner{
+	width: 100px !important; 
+	height: 100px !important;
+
+}

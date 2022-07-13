@@ -1,0 +1,395 @@
+@extends('layouts.mainBackend')
+@php  @endphp
+
+@section('title') Role @endsection
+
+
+@section('styles')
+
+@endsection
+
+
+
+@section('content')
+
+    <div class="page-header card">
+    </div>
+    <div class="card">
+        <div class="content-header">
+            <div class="container-fluid card-block">
+                <div class="row mb-2">
+                    <div class="col-sm-6">
+                        <h1 class="m-0">{{__('msg.Menu')}}</h1>
+                    </div>
+                    <div class="col-sm-6">
+                        <ol class="breadcrumb float-sm-right">
+                            <li class="breadcrumb-item"><a href="/">{{__('msg.Home')}}</a></li>
+                            <li class="breadcrumb-item active">Talaba</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="breadcrumb-and-filter">
+                <div class="row">
+                    <div class="col-md-9">
+                        <div class="action-content">
+                            <button style="margin-bottom: 10px" class="btn btn-danger delete_all" data-url="{{ route('borowwing.destroyMultiple') }}">Belgilangan talabalarni o'chirish</button>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="create-data" style="float: right;">
+                                {{-- <a href="{{route('borowwing.create')}}" class=" style-add btn btn-primary">{{__('msg.Create')}}</a> --}}
+                                
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#staticBackdrop">
+                                    Launch static backdrop modal
+                                  </button>
+                                  
+                                
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (session('success'))
+            <div class="alert alert-success" role="alert">
+                {{ session('success') }}
+            </div>
+        @endif
+        @if (session('error'))
+            <div class="alert alert-danger" role="alert">
+                {{ session('error') }}
+            </div>
+        @endif
+       
+        
+        @error('student')<div class="alert alert-danger">{{$message}}</div>@enderror
+        @error('book')<div class="alert alert-danger">{{$message}}</div>@enderror
+        @error('date_borrowwed')<div class="alert alert-danger">{{$message}}</div>@enderror
+        
+
+        <div class="card-body">
+            <table id="dashboard_datatable" class="table table-bordered table-hover">
+                <thead>
+                <tr>
+                    <th><input type="checkbox" id="master"></th>
+                    {{-- <th>#</th> --}}
+                    <th>Talaba</th>
+                    <th>Kitob</th>
+                    <th>Status</th>
+                    <th>Olingan sana</th>
+                    <th>Qaytarilgan sana</th>
+                    <th>{{__('msg.Actions')}}</th>
+                </tr>
+                </thead>
+                <tbody>
+
+                @foreach($models as $key => $model)
+                    <tr>
+                        <td><input type="checkbox" class="sub_chk" data-id="{{$model->id}}"></td>
+                        {{-- <th scope="row">{{ $models->firstItem()+$key }}</th> --}}
+                        <td>{{ $model->student_id }}</td>
+                        <td>{{ $model->book_id }}</td>
+                        <td>{{ $model->status }}</td>
+                        <td>{{ $model->date_borrowwed }}</td>
+                        <td>{{ $model->date_return }}</td>
+                        <td>
+                            <div style="text-align: center;">
+                               
+                                <a href="{{route('borowwing.edit',$model->id)}}" class="btn btn-primary" title="update">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </a>
+                                {{-- <a href="{{route('borowwing.show',$model->id)}}" class="btn btn-primary" title="show">
+                                    <i class="fas fa-eye"></i>
+                                </a> --}}
+                                <form style="display: inline-block;" action="{{route('borowwing.destroy',$model->id)}}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="delete-data-item btn btn-danger" title="delete">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+                </tbody>
+            </table>
+            {{-- {{ $models->links() }} --}}
+        </div>
+    </div>
+
+
+  <!-- Modal -->
+  <div class="modal fade" id="staticBackdrop" data-backdrop="static" data-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <form id="student_form" action="{{route('borowwing.store')}}" method="POST" enctype="multipart/form-data">
+            @csrf
+        <div class="modal-header">
+          <h5 class="modal-title" id="staticBackdropLabel">Modal title</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+            
+                <div class="row">
+                    <div class="col-md-12">
+                        
+                        <div class="" id="borowwingt_error" role="alert"></div>
+                            <div class="card-body">
+                                <div class="form-group" id="student_id_div">
+                                    <label for="student_id">Talaba</label>
+                                    <select required name="student" id="student_id"  data-placeholder="Select a role" class="form-control select2 @error('student') is-invalid error-data-input @enderror" value="{{ old('student') }}">
+                                        @if(!empty($students))
+                                            <option value="">------------</option>
+                                            @foreach($students as $student)
+                                                <option value="{{$student->id}}">{{$student->first_name }} {{$student->last_name}}</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <span class="error-data">@error('student'){{$message}}@enderror</span>
+                                </div>
+                                <div class="form-group" id="book_id_div">
+                                    <label for="book_id">Kitob</label>
+                                    <select required name="book" id="book_id"  data-placeholder="Select a role" class="form-control select2 @error('book') is-invalid error-data-input @enderror" value="{{ old('book') }}">
+                                        @if(!empty($books))
+                                            <option value="">------------</option>
+                                            @foreach($books as $book)
+                                                <option value="{{$book->id}}">{{$book->book_code }}({{$book->book_count}})</option>
+                                            @endforeach
+                                        @endif
+                                    </select>
+                                    <span class="error-data">@error('book'){{$message}}@enderror</span>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="date_borrowwedId">Sana</label>
+                                    <input type='text' id="date_borrowwedId" required name="date_borrowwed" class="form-control @error('date_borrowwed') is-invalid error-data-input @enderror" value="{{ old('date_borrowwed') }}" >
+                                    <span class="error-data">@error('date_borrowwed'){{$message}}@enderror</span>
+                                </div>
+                
+        
+                            </div>
+                    </div>
+                 
+                </div>
+            
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+          <button type="submit" class="btn btn-success" id="">{{__('msg.Create')}}</button>
+        </div>
+        </form>
+      </div>
+    </div>
+  </div>
+{{-- 
+<div id="loader"></div>
+
+  <div class="modal fade" id="mediumModal" tabindex="-1" role="dialog" aria-labelledby="mediumModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog " role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="mediumBody">
+                    <div class="" id="borowwing_success" role="alert"></div>
+                    <div>
+                        <!-- the result to be displayed apply here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div> --}}
+
+<style>
+    /* .form-input-item{
+        border:1px solid red !important;
+    }
+    .form-select-item{
+        border: 1px solid red !important;
+    } */
+
+</style>
+@endsection
+
+@section('scripts')
+<script>
+    $(document).ready(function () {
+        $("#dashboard_datatable").DataTable({
+            "responsive": true, 
+            "lengthChange": true, 
+            "autoWidth": false,
+            "paging": false
+            
+        });
+
+        $('form #date_borrowwedId').datetimepicker({
+            format: 'Y-M-D'
+        });
+        
+       
+
+        //modal
+        // $('form #create_borowwing').on('click', function(event) {
+        //     event.preventDefault();
+        //     $.ajaxSetup({
+        //         headers: {
+        //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        //         }
+        //     });
+        //     let student = $("#student_id").val();
+        //     let book = $("#book_id").val();
+        //     let date_borrowwed = $("#date_borrowwedId").val();
+        //     $.ajax({
+        //         type: "POST", 
+        //         url: "/admin/borowwing/store", 
+        //         data: {
+        //             student:student,
+        //             book:book,
+        //             date_borrowwed:date_borrowwed,
+        //             },
+        //         dataType: "json",
+        //         beforeSend: function() {
+        //             $('#loader').show();
+        //             $("#loader").html('<img src="/assets-backend/img/loading.gif" alt="loading">')
+        //         },
+
+        //         success: function(result) {
+        //             $('#mediumModal').modal("show");
+        //             $('#mediumBody').html(result).show();
+        //             $('#staticBackdrop').hide();
+        //         },
+        //         complete: function() {
+        //             $('#loader').hide();
+        //         },
+        //         error: function(error) {
+        //             // console.log(error);
+        //             $.each(error.responseJSON, function (key, value) {
+        //                     $('#borowwing_error').addClass('alert alert-danger');
+        //                     console.log(key);
+        //                     console.log(value);
+        //                     Object.entries(value).forEach(([key, val]) => {
+        //                         $(`.select2`).addClass('form-select-item');
+        //                         $(`input[type='text']`).addClass('form-select-item');
+        //                         $('#borowwing_error').append(` ${key} => ${val} `);
+        //                         // console.log(key); // the name of the current key.
+        //                         // console.log(val); // the value of the current key.
+        //                     });
+        //                 });
+        //             alert("Page cannot open. Error:" + error);
+        //             $('#loader').hide();
+        //         },
+        //         timeout: 8000
+        //     })
+        // });
+
+        //delete multimple data
+        $('#master').on('click', function(e) {
+         if($(this).is(':checked',true))  
+         {
+            $(".sub_chk").prop('checked', true);  
+         } else {  
+            $(".sub_chk").prop('checked',false);  
+         }  
+        });
+
+        $('.delete_all').on('click', function(e) {
+
+            var allVals = [];  
+            $(".sub_chk:checked").each(function() {  
+                allVals.push($(this).attr('data-id'));
+            });  
+
+            if(allVals.length <=0)  
+            {  
+                alert("Please select row.");  
+            }  else {  
+
+                var check = confirm("Belgilangan qatorlarni o'chirishga ishonchingiz komilmi?");  
+                if(check == true){  
+
+                    var join_selected_values = allVals.join(","); 
+
+                    $.ajax({
+                        url: $(this).data('url'),
+                        type: 'DELETE',
+                        headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                        data: 'ids='+join_selected_values,
+                        success: function (data) {
+                            if (data['success']) {
+                                $(".sub_chk:checked").each(function() {  
+                                    $(this).parents("tr").remove();
+                                });
+                                alert(data['success']);
+                            } else if (data['error']) {
+                                alert(data['error']);
+                            } else {
+                                alert('Whoops Something went wrong!!');
+                            }
+                        },
+                        error: function (data) {
+                            alert(data.responseText);
+                        }
+                    });
+
+                  $.each(allVals, function( index, value ) {
+                      $('table tr').filter("[data-row-id='" + value + "']").remove();
+                  });
+                }  
+            }  
+        });
+
+        $('[data-toggle=confirmation]').confirmation({
+            rootSelector: '[data-toggle=confirmation]',
+            onConfirm: function (event, element) {
+                element.trigger('confirm');
+            }
+        });
+
+        $(document).on('confirm', function (e) {
+            var ele = e.target;
+            e.preventDefault();
+
+            $.ajax({
+                url: ele.href,
+                type: 'DELETE',
+                headers: {'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')},
+                success: function (data) {
+                    if (data['success']) {
+                        $("#" + data['tr']).slideUp("slow");
+                        alert(data['success']);
+                    } else if (data['error']) {
+                        alert(data['error']);
+                    } else {
+                        alert('Whoops Something went wrong!!');
+                    }
+                },
+                error: function (data) {
+                    alert(data.responseText);
+                }
+            });
+
+            return false;
+        });
+
+    });
+</script>
+@endsection
+
+
+
+
+
+
+

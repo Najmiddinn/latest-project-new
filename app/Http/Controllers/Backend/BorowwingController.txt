@@ -1,0 +1,272 @@
+<?php
+
+namespace App\Http\Controllers\Backend;
+
+use App\Http\Controllers\Controller;
+use App\Models\Book;
+use App\Models\Borowwing;
+use App\Models\Student;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
+
+class BorowwingContoller extends Controller
+{
+    public function __construct()
+    {
+        $this->middleware('permission:data-all|data-create|data-edit|data-show|data-delete', ['only' => ['index']]);
+        $this->middleware('permission:data-create|data-all', ['only' => ['create','store']]);
+        $this->middleware('permission:data-show|data-all', ['only' => ['show']]);
+        $this->middleware('permission:data-edit|data-all', ['only' => ['edit','update']]);
+        $this->middleware('permission:data-delete|data-all', ['only' => ['destroy']]);
+        
+    }
+    /**
+     * Display a listing of the resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function index()
+    {   
+        $students = Student::all();
+        $models = Borowwing::orderBy('id','desc')->take(10)->get();
+        // $models = Borowwing::orderBy('id','desc')->limit(20)->get();
+
+        return view('backend.borowwing.index',[
+			'models'=>$models,
+			'students'=>$students,
+		]);
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        //
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\Response
+     */
+    public function store(Request $request)
+    {
+
+        $validator = Validator::make($request->all(),[
+            'student' =>  ['required', 'integer'],
+            'book' => ['required','integer'],
+            'date_borrowwed' => ['required','date']
+
+            ]); 
+        
+        if ($validator->fails())
+        {
+            // $request->session()->flash('error', $validator);
+            return redirect()->route('borowwing.index')->withErrors($validator)->withInput();
+        }
+        $book = Book::where(['book_code'=>$request->book])->first();
+        if ($book->book_count==0) {
+            return redirect()->route('borowwing.index')->with('warning','Bu kitob qolmagan ');
+        }
+        $model = Borowwing::create([
+            'student_id' => $request->student,
+            'book_id' => $book->id,
+            'date_borrowwed' => $request->date_borrowwed,
+
+        ]);
+
+        if ($model) {
+            return redirect()->route('borowwing.index')->with('success','book ' . __('msg.successfully created'));
+
+        }
+
+        return redirect()->route('borowwing.borowwing')->withInput();
+      
+        // if($request->ajax()){
+            
+        //     $validator = Validator::make($request->all(),[
+        //         'student' =>  ['required', 'integer'],
+        //         'book' => ['required','integer'],
+        //         'date_borrowwed' => ['required','date']
+ 
+        //      ]); 
+            
+        //     if ($validator->fails())
+        //     {
+        //         return response()->json([
+        //             'success' => false,
+        //             'message' => $validator->getMessageBag()->toArray()
+        //         ], 400); 
+        //     }
+ 
+        //     $model = Borowwing::create([
+        //         'student_id' => $request->student,
+        //         'book_id' => $request->book,
+        //         'date_borrowwed' => $request->date_borrowwed,
+ 
+        //     ]);
+
+        //     return response()->json([
+        //         'success' => true,
+        //         'message'=> $model->title .' Kitob muvaffaqiyatli berildi'
+        //     ]);   
+             
+        //  }
+ 
+    }
+
+    /**
+     * Display the specified resource.
+     *
+     * @param  \App\Models\Borowwing  $borowwing
+     * @return \Illuminate\Http\Response
+     */
+    public function show(Borowwing $borowwing)
+    {
+        //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  \App\Models\Borowwing  $borowwing
+     * @return \Illuminate\Http\Response
+     */
+    public function edit($id)
+    {
+        $borowwing = Borowwing::findOrFail($id);
+        $book = Book::findOrFail($borowwing->book_id);
+        $student = Student::findOrFail($borowwing->student_id);
+	    return response()->json([
+	      'borowwing' => $borowwing,
+	      'book_code' => $book->book_code,
+	      'student_id' => $student->id,
+	      'student_first_name' => $student->first_name,
+	      'student_last_name' => $student->last_name,
+	    ]);
+    }
+
+    /**
+     * Update the specified resource in storage.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\Borowwing  $borowwing
+     * @return \Illuminate\Http\Response
+     */
+    public function update(Request $request, $id)
+    {
+        $model = Borowwing::findOrFail($id);
+        $validator = Validator::make($request->all(),[
+            'student_edit' =>  ['required', 'integer'],
+            'book_edit' => ['required','integer'],
+            'date_borrowwed_edit' => ['required','date'],
+            'date_return_edit' => ['nullable','date'],
+            'status' => ['nullable','integer']
+
+        ]); 
+        
+        if ($validator->fails())
+        {
+            // $request->session()->flash('error', $validator);
+            return redirect()->route('borowwing.index')->withErrors($validator)->withInput();
+        }
+
+        $book = Book::where(['book_code'=>$request->book_edit])->first();
+        if ($book->book_count == 0) {
+            return redirect()->route('borowwing.index')->with('warning','Bu kitob qolmagan ');
+        }
+
+        $model->student_id = $request->student_edit;
+        $model->book_id = $book->id;
+        $model->status = $request->status;
+        $model->date_borrowwed = $request->date_borrowwed_edit;
+        $model->date_return = $request->date_return_edit;
+
+        if ($model->update()){
+            return redirect()->route('borowwing.index')->with('success','' . __('msg.successfully updated'));
+
+        }
+
+        return redirect()->route('borowwing.index')->withInput();
+      
+
+
+
+        // if($request->ajax()){
+        //     $model = Borowwing::findOrFail($id);
+        
+        //     $validator = Validator::make($request->all(),[
+        //         'student_edit' =>  ['required', 'integer'],
+        //         'book_edit' => ['required','integer'],
+        //         'date_borrowwed_edit' => ['required','date'],
+        //         'date_return_edit' => ['nullable','date'],
+        //         'status' => ['nullable','integer']
+ 
+        //      ]); 
+            
+        //     if ($validator->fails())
+        //     {
+        //         return response()->json([
+        //             'success' => false,
+        //             'message' => $validator->getMessageBag()->toArray()
+        //         ], 400); 
+        //     }
+        //     $book = Book::where(['book_code'=>$request->book_edit])->first();
+        //     if ($book->book_count==0) {
+        //         return response()->json([
+        //             'success' => false,
+        //             'message' => 'Bu kitob qolmagan'
+        //         ], 400); 
+        //     }
+            
+        //     $model->student_id = $request->student_edit;
+        //     $model->book_id = $book->id;
+        //     $model->status = $request->status;
+        //     $model->date_borrowwed = $request->date_borrowwed_edit;
+        //     $model->date_return = $request->date_return_edit;
+
+        //     if ($model->update()) {
+        //         return response()->json([
+        //             'success' => true,
+        //             'message'=> 'Muvaffaqiyatli tahrirlandi'
+        //         ]);   
+                 
+        //     }
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'Xatolik'
+        //     ], 400); 
+           
+        //  }
+    }
+
+    public function destroyMultiple(Request $request)
+    {
+        $booksId = $request->ids;
+        if ($booksId) {
+            DB::table("borowwing")->whereIn('id',explode(",",$booksId))->delete();
+            return response()->json(['success'=>"Talabalar muvaffaqiyatli o'chirildi"]);
+        }
+		
+    }
+    /**
+     * Remove the specified resource from storage.
+     *
+     * @param  \App\Models\Borowwing  $borowwing
+     * @return \Illuminate\Http\Response
+     */
+    public function destroy($id)
+    {
+        $model = Borowwing::findOrFail($id);
+        
+        if (!empty($model)) {
+            $model->delete();
+            return redirect()->route('borowwing.index')->with('success','borowwing ' . __('successfully deleted'));
+        }
+    }
+}

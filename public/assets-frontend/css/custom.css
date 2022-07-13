@@ -1,0 +1,31 @@
+.header-logo .logo .logo-img {
+	display: inline;
+    width: 65px;
+    margin-left: 3px;
+    float: left;
+    margin-right: 15px;
+}
+.header-search .my-form input{
+	width: calc(100% - 120px);margin-right: -4px;
+}
+.pagination-book{
+    text-align: center;
+    margin-top:50px
+}
+.pagination-book .page-item.active .page-link{
+    background-color: #D10024; 
+    border-color: #D10024;
+    color: #fff;
+}
+.pagination-book .page-item .page-link{
+    color: #D10024;
+}
+
+.book-section .product-body{
+    height: 150px;
+    display: grid;
+    align-items: center;
+}
+.main-nav>li+li{
+    margin-left: 20px;
+}
